@@ -1,6 +1,6 @@
 # Terminal DeepSearch
 
-> *"Why pay $20/month when I have 32GB of RAM and an RTX 4070 heating up my dorm room?"*
+> *"Why pay money for a llm when I have 32GB of RAM and an RTX 4070 heating up room?"*
 
 **Terminal DeepSearch** is a free, privacy-focused research assistant that lives in your Linux terminal. It combines the reasoning power of **GPT-OSS (20B)** with real-time web search to replace tools like Perplexity or ChatGPT Plus.
 
