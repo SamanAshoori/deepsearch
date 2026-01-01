@@ -1,26 +1,45 @@
 #!/usr/bin/env python3
 import sys
 import warnings
+import requests  # Changed from duckduckgo_search
 import ollama
-from duckduckgo_search import DDGS
 from colorama import Fore, Style, init
 
 # Silence warnings
 warnings.filterwarnings("ignore")
 
-#init colours
+# Init colours
 init(autoreset=True)
 
 MODEL_NAME = "gpt-oss:20b"
+# Get your free key from https://brave.com/search/api/
+BRAVE_API_KEY = "YOUR_BRAVE_API_KEY_HERE" 
 
 def search_web(query):
-    print(f"{Fore.GREEN}Searching the web for: '{query}'...{Style.RESET_ALL}")
+    print(f"{Fore.GREEN}Searching Brave for: '{query}'...{Style.RESET_ALL}")
+    
+    url = "https://api.search.brave.com/res/v1/web/search"
+    headers = {
+        "Accept": "application/json",
+        "X-Subscription-Token": BRAVE_API_KEY
+    }
+    params = {"q": query, "count": 5}
+
     try:
-        results = DDGS().text(query, max_results=5)
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code != 200:
+            return f"Error: Brave API returned {response.status_code}"
+        
+        data = response.json()
+        results = data.get('web', {}).get('results', [])
+        
         if not results:
             return "No results found."
-        context = "\n".join([f"- {r['title']}: {r['body']}" for r in results])
+        
+        # Format the results
+        context = "\n".join([f"- {r['title']}: {r['description']}" for r in results])
         return context
+        
     except Exception as e:
         return f"Search failed: {e}"
 
@@ -31,26 +50,35 @@ def main():
 
     user_query = " ".join(sys.argv[1:])
     
-    #step 1 of search - get context
+    # Step 1: Search
     context = search_web(user_query)
     
-    # step 2 - strucutre prompt
+    # Step 2 - Structure prompt
     full_prompt = f"""
-    Context from web search:
+    ### CONTEXT FROM SEARCH
     {context}
 
-    User Question: {user_query}
+    ### USER QUESTION
+    {user_query}
 
-    Instructions:
-    - You are an intelligent research assistant.
-    - Synthesize the search results to answer the user's question accurately.
-    - If the search results are conflicting, explain the conflict.
-    - Provide a concise, high-quality answer in English.
+    ### SYSTEM INSTRUCTIONS
+    You are a CLI-based research assistant designed for high-density information retrieval.
+    
+    1. **Directness:** Answer immediately. Do NOT use introductory filler (e.g., "Based on the search results...").
+    2. **Formatting:** Use Markdown heavily. 
+       - Use `## Headers` for sections.
+       - Use `- Bullet points` for lists (easier to read in terminal).
+       - Use `**Bold**` for key terms or metrics.
+       - Use `Code Blocks` for technical commands or code.
+    3. **Citations:** When stating a fact, briefly reference the source title in brackets, e.g., [Source Name].
+    4. **Synthesis:** If sources conflict, create a specific section titled "Conflicts" and summarize the difference.
+    5. **Honesty:** If the provided context does not answer the question, state: "Insufficient data in search results."
+    6. **Technical Detail:** If the query is technical, prioritize syntax-correct code blocks and CLI commands over prose descriptions.
     """
 
     print(f"{Fore.RED}GPT-OSS 20B is thinking... (This may take a moment){Style.RESET_ALL}\n")
 
-    # stream response to terminal in a try except block
+    # Step 3: Stream response
     try:
         stream = ollama.chat(
             model=MODEL_NAME,
