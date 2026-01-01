@@ -92,13 +92,16 @@ source ~/.bashrc
 Just type `ask` followed by your question.
 
 ```bash
-ask "What are the breaking changes in the latest React 19 release?"
+ask "What is the difference between C++17 and C++20?"
 ```
 
 **What happens:**
 1.  **Searching:** The script queries the Brave API for high-relevance results.
 2.  **Thinking:** GPT-OSS 20B loads (partially on GPU, partially on CPU) to analyse the results.
 3.  **Answer:** You get a synthesised, cited summary in your terminal.
+   
+<img width="2293" height="1016" alt="image" src="https://github.com/user-attachments/assets/2ed509e4-6966-4eba-a17b-16dcbc1c516c" />
+
 
 ---
 
